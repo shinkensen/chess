@@ -1,25 +1,68 @@
-import { PieceCoords } from "../page";
 
-export type MoveResult = {
-    gameState: string[][];
-    pieceCoordinates: PieceCoords;
-};
-
-export function moveKnight(reRender:(gameState:string[][],x1:number,y1:number,x2:number,y2:number,pieceCoordinates:PieceCoords)=>MoveResult,gameState:string[][], x1:number,y1:number,x2:number, y2 :number,pieceCoordinates:PieceCoords): [MoveResult | null, boolean]{
-    if (canMoveKnight(gameState,x1,y1,x2,y2)){
-        const ret = reRender(gameState,x1,y1,x2,y2,pieceCoordinates);
-        return [ret,true];
-    }
-    return [null,false];
+import {
+  Board,
+  Colour,
+  CastlingRights,
+  MovegenOpts,
+  GameStatus,
+  legalMoves,
+  applyMove,
+  getGameStatus,
+} from "./chess-engine";
+export interface GameState {
+  board: Board;
+  turn: Colour;
+  enPassantTarget: [number, number] | null;
+  castlingRights: CastlingRights;
+  status: GameStatus;
+  pendingPromotion: { r: number; c: number; colour: Colour } | null;
 }
-function canMoveKnight(gameState:string[][], x1:number, y1:number,x2:number,y2:number){
-    const dx = Math.abs(x1 - x2);
-    const dy = Math.abs(y1 - y2);
-
-    if ((dx === 1 && dy === 2) || (dx === 2 && dy === 1)){
-        if (gameState[x1][y1] !== "" && gameState[x2][y2] !== gameState[x1][y1]){
-            return true;
-        }
-    }
-    return false;
+export interface MoveResult {
+  ok: boolean;
+  nextState: GameState;
+  captured: boolean;
+}
+export function tryMove(
+  state: GameState,
+  r1: number, c1: number,
+  r2: number, c2: number,
+  promotionChoice: string = "Q"
+): MoveResult {
+  const { board, turn, enPassantTarget, castlingRights } = state;
+  const opts: MovegenOpts = { enPassantTarget };
+  const piece = board[r1][c1];
+  if (!piece || piece[1] !== turn) return { ok: false, nextState: state, captured: false };
+  const legal = legalMoves(board, r1, c1, opts, castlingRights);
+  if (!legal.some(([lr, lc]) => lr === r2 && lc === c2)) {
+    return { ok: false, nextState: state, captured: false };
+  }
+  const captured = board[r2][c2] !== "";
+  const {
+    board: nextBoard,
+    enPassantTarget: nextEP,
+    castlingRights: nextCastle,
+    needsPromotion,
+  } = applyMove(board, r1, c1, r2, c2, opts, castlingRights, promotionChoice);
+  const nextTurn: Colour = turn === "W" ? "B" : "W";
+  const nextOpts: MovegenOpts = { enPassantTarget: nextEP };
+  const nextStatus = getGameStatus(nextBoard, nextTurn, nextOpts, nextCastle);
+  const nextState: GameState = {
+    board: nextBoard,
+    turn: nextTurn,
+    enPassantTarget: nextEP,
+    castlingRights: nextCastle,
+    status: nextStatus,
+    pendingPromotion: needsPromotion ? { r: r2, c: c2, colour: turn } : null,
+  };
+  return { ok: true, nextState, captured };
+}
+export function initialGameState(board: Board, castlingRights: CastlingRights): GameState {
+  return {
+    board,
+    turn: "W",
+    enPassantTarget: null,
+    castlingRights,
+    status: "playing",
+    pendingPromotion: null,
+  };
 }

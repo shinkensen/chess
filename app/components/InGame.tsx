@@ -1,6 +1,6 @@
 "use client";
 import { useState, useCallback, useEffect,use } from "react";
-import { Board } from "./components/Board";
+import { Board } from "./Board";
 import {
   buildStartingBoard,
   defaultCastlingRights,
@@ -10,9 +10,10 @@ import {
   Board as ChessBoard,
   CastlingRights,
   Colour,
-} from "./components/chess-engine";
-import { tryMove, initialGameState, GameState } from "./components/Game";
-import { RightDashboard } from "./components/RightDashboard";
+} from "./chess-engine";
+import { tryMove, initialGameState, GameState } from "./Game";
+import { RightDashboard } from "./RightDashboard";
+import { supabase } from "../utils/supabase";
 function createInitialState(): GameState {
   return initialGameState(buildStartingBoard(), defaultCastlingRights());
 }
