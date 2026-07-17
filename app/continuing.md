@@ -63,3 +63,15 @@ with the overall thing looking like this
     player2 : playerObject,
     pool: 2x the lower of the 2 bets
 }
+
+what if instead of a system where players bet inital amts and so do external betters, we had a system were external betters
+could "buy in" and sell their stake in the game? Instead of the state of the game based on stockfish analysis or some other engine
+the price of each stake could be determined by the number and value of the stakes that others hold instead, 
+but how would this work mathematicaly? Maybe the total pool of cost can be reflected by the pool of the players themselves
+like a game with a 500 gold pool would stake each share at 5. essentially I am building a prediction market for chess games here
+
+
+
+this is the goal today, get the damn game working over multiplayer, we can get the whole homepage, the betting and every other piece of the puzzle sorted later but i want to 
+get the core functionality done and dusted rather than working on other stuff first 
+

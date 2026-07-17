@@ -25,7 +25,7 @@ interface PrePromotionSnapshot {
   castlingRights: CastlingRights;
   prevTurn: Colour;
 }
-export function InGame({gameId}:{ gameId:string }) {
+export function HomeScreen() {
   const [gameState, setGameState] = useState<GameState>(createInitialState);
   const [prePromotion, setPrePromotion] = useState<PrePromotionSnapshot | null>(null);
   const handleMove = useCallback((r1: number, c1: number, r2: number, c2: number) => {
@@ -83,24 +83,6 @@ export function InGame({gameId}:{ gameId:string }) {
     : status === "stalemate" ? "#aaa"
     : status === "check" ? "#f6a623"
     : "#ddd";
-    useEffect(() => {
-        const channel = supabase
-            .channel(`game-${gameId}`)
-            .on(
-            "postgres_changes",
-            { event: "UPDATE", schema: "public", table: "games", filter: `gameId=eq.${gameId}` },
-            payload => {
-                const move = payload.new.lastMove;
-                const result = tryMove(gameState, move.r1, move.c1, move.r2, move.c2,true);
-                if (result.ok) setGameState(result.nextState);
-            }
-            )
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, [gameId, gameState]);
   return (
     <main style={{
       minHeight: "100vh",
