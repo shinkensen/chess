@@ -8,12 +8,24 @@ import {
   colourOf,
 } from "./chess-engine";
 import type { GameState } from "./Game";
+
 interface BoardProps {
   gameState: GameState;
   onMove: (r1: number, c1: number, r2: number, c2: number) => void;
   onPromotion: (choice: string) => void;
+  /** if false, clicks are ignored (e.g. not your turn / spectating) */
+  interactive?: boolean;
+  /** flip the board so black is at the bottom */
+  flipBoard?: boolean;
 }
-export const Board = ({ gameState, onMove, onPromotion }: BoardProps) => {
+
+export const Board = ({
+  gameState,
+  onMove,
+  onPromotion,
+  interactive = true,
+  flipBoard = false,
+}: BoardProps) => {
   const [selected, setSelected] = useState<[number, number] | null>(null);
   const [hints, setHints] = useState<[number, number][]>([]);
 
@@ -21,6 +33,7 @@ export const Board = ({ gameState, onMove, onPromotion }: BoardProps) => {
   const opts: MovegenOpts = { enPassantTarget };
 
   const handleSquareClick = useCallback((r: number, c: number) => {
+    if (!interactive) return;
     if (status === "checkmate" || status === "stalemate") return;
 
     const piece = board[r][c];
@@ -46,7 +59,8 @@ export const Board = ({ gameState, onMove, onPromotion }: BoardProps) => {
     }
     setSelected(null);
     setHints([]);
-  }, [board, turn, selected, hints, opts, castlingRights, status, onMove]);
+  }, [board, turn, selected, hints, opts, castlingRights, status, onMove, interactive]);
+
   let checkSquare: [number, number] | null = null;
   if (status === "check" || status === "checkmate") {
     for (let r = 0; r < 8; r++)
@@ -55,15 +69,18 @@ export const Board = ({ gameState, onMove, onPromotion }: BoardProps) => {
   }
 
   const squares: React.ReactNode[] = [];
-  for (let r = 0; r < 8; r++) {
-    for (let c = 0; c < 8; c++) {
+  const rows = flipBoard ? [7, 6, 5, 4, 3, 2, 1, 0] : [0, 1, 2, 3, 4, 5, 6, 7];
+  const cols = flipBoard ? [7, 6, 5, 4, 3, 2, 1, 0] : [0, 1, 2, 3, 4, 5, 6, 7];
+  for (const r of rows) {
+    for (const c of cols) {
       const light = (r + c) % 2 === 0;
       const isSelected = selected !== null && selected[0] === r && selected[1] === c;
       const isHint = hints.some(([hr, hc]) => hr === r && hc === c);
       const isCheck = checkSquare !== null && checkSquare[0] === r && checkSquare[1] === c;
       const piece = board[r][c];
+      const key = flipBoard ? `${7 - r}-${7 - c}` : `${r}-${c}`;
       squares.push(
-        <div key={r * 8 + c} style={{ width: "100%", height: "100%" }}>
+        <div key={key} style={{ width: "100%", height: "100%" }}>
           <Square
             light={light}
             selected={isSelected}
@@ -73,39 +90,55 @@ export const Board = ({ gameState, onMove, onPromotion }: BoardProps) => {
           >
             {piece ? <PieceIcon code={piece} /> : null}
           </Square>
-        </div>
+        </div>,
       );
     }
   }
 
   return (
     <div>
-      <div style={{
-        width: "600px",
-        aspectRatio: "1 / 1",
-        display: "grid",
-        gridTemplateColumns: "repeat(8, 1fr)",
-        gridTemplateRows: "repeat(8, 1fr)",
-        border: "2px solid #555",
-        boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
-      }}>
+      <div
+        style={{
+          width: "600px",
+          aspectRatio: "1 / 1",
+          display: "grid",
+          gridTemplateColumns: "repeat(8, 1fr)",
+          gridTemplateRows: "repeat(8, 1fr)",
+          border: "2px solid #555",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+        }}
+      >
         {squares}
       </div>
       {pendingPromotion && (
-        <div style={{
-          position: "fixed", inset: 0,
-          background: "rgba(0,0,0,0.6)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          zIndex: 100,
-        }}>
-          <div style={{
-            background: "#2a2a2a", borderRadius: "12px", padding: "24px",
-            display: "flex", flexDirection: "column", alignItems: "center", gap: "16px",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
-          }}>
-            <h2 style={{ color: "#fff", margin: 0, fontFamily: "sans-serif" }}>Promote Pawn</h2>
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 100,
+          }}
+        >
+          <div
+            style={{
+              background: "#2a2a2a",
+              borderRadius: "12px",
+              padding: "24px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "16px",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
+            }}
+          >
+            <h2 style={{ color: "#fff", margin: 0, fontFamily: "sans-serif" }}>
+              Promote Pawn
+            </h2>
             <div style={{ display: "flex", gap: "12px" }}>
-              {["Q", "R", "B", "N"].map(choice => (
+              {["Q", "R", "B", "N"].map((choice) => (
                 <button
                   key={choice}
                   onClick={() => onPromotion(choice)}
@@ -119,12 +152,12 @@ export const Board = ({ gameState, onMove, onPromotion }: BoardProps) => {
                     color: "#fff",
                     transition: "background 0.15s",
                   }}
-                  onMouseEnter={e => (e.currentTarget.style.background = "#555")}
-                  onMouseLeave={e => (e.currentTarget.style.background = "#3a3a3a")}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "#555")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "#3a3a3a")}
                 >
                   {pendingPromotion.colour === "W"
-                    ? { Q: "♕", R: "♖", B: "♗", N: "♘" }[choice]
-                    : { Q: "♛", R: "♜", B: "♝", N: "♞" }[choice]}
+                    ? ({ Q: "♕", R: "♖", B: "♗", N: "♘" } as Record<string, string>)[choice]
+                    : ({ Q: "♛", R: "♜", B: "♝", N: "♞" } as Record<string, string>)[choice]}
                 </button>
               ))}
             </div>
