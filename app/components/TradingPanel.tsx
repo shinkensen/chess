@@ -54,8 +54,19 @@ export default function TradingPanel({ marketId, status, prices }: { marketId: s
     if (!session || !quote) return;
     setPending(true);
     setMessage('');
-    const limitCents = side === 'buy' ? Math.ceil(quote.totalCents * 1.02) : Math.floor(quote.totalCents * 0.98);
+    
+    // Refresh quote right before execution to minimize slippage
     try {
+      const refreshResponse = await fetch('/api/trade/quote', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` }, 
+        body: JSON.stringify({ marketId, outcome, side, sharesMilli: shares * 1000 }) 
+      });
+      const refreshBody = await refreshResponse.json();
+      const freshQuote = refreshResponse.ok ? (refreshBody.quote ?? refreshBody) : quote;
+      
+      const limitCents = side === 'buy' ? Math.ceil(freshQuote.totalCents * 1.05) : Math.floor(freshQuote.totalCents * 0.95);
+      
       const response = await fetch('/api/trade/execute', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` }, body: JSON.stringify({ marketId, outcome, side, sharesMilli: shares * 1000, limitCents, idempotencyKey: crypto.randomUUID() }) });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error ?? 'Trade failed');

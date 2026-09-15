@@ -85,12 +85,12 @@ begin
   end if;
   if p_side='buy' then
     update public.wallets set balance_cents=balance_cents-v_total where profile_id=v_user;
-    insert into public.ledger (profile_id,transaction_type,amount_cents,market_id,description)
-    values (v_user,'trade_debit',-v_total,p_market_id,'Buy '||p_shares_milli||' '||p_outcome||' shares');
+    insert into public.wallet_ledger (profile_id,amount_cents,balance_after_cents,kind,reference_id,description)
+    values (v_user,-v_total,(select balance_cents from public.wallets where profile_id=v_user),'trade',p_market_id,'Buy '||p_shares_milli||' '||p_outcome||' shares');
   else
     update public.wallets set balance_cents=balance_cents+v_total where profile_id=v_user;
-    insert into public.ledger (profile_id,transaction_type,amount_cents,market_id,description)
-    values (v_user,'trade_credit',v_total,p_market_id,'Sell '||p_shares_milli||' '||p_outcome||' shares');
+    insert into public.wallet_ledger (profile_id,amount_cents,balance_after_cents,kind,reference_id,description)
+    values (v_user,v_total,(select balance_cents from public.wallets where profile_id=v_user),'trade',p_market_id,'Sell '||p_shares_milli||' '||p_outcome||' shares');
   end if;
   if p.id is null then
     insert into public.positions (market_id,profile_id,outcome,shares_milli,cost_basis_cents)
