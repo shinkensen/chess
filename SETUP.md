@@ -6,7 +6,7 @@
 - A Supabase project (cloud or local CLI stack).
 - Optional: a Stockfish executable for stronger bot evaluation.
 
-All balances are fictional play credits. New accounts receive exactly 10,000 credits and there is no deposit, withdrawal, prize, or cash-redemption path.
+All balances are fictional play credits. New accounts receive exactly 500 credits and there is no deposit, withdrawal, prize, or cash-redemption path.
 
 ## Environment
 
@@ -40,7 +40,7 @@ supabase start
 supabase db reset
 ```
 
-The migration creates auth profile provisioning (with a 10,000-credit wallet and ledger entry), games and markets, LMSR quote/execution RPCs, settlement, worker leases, RLS policies, and Supabase Realtime publication entries.
+The migration creates auth profile provisioning (with a 500-credit wallet and ledger entry), games and markets, LMSR quote/execution RPCs, settlement, worker leases, RLS policies, and Supabase Realtime publication entries.
 
 Before production, verify in a staging project that anonymous/authenticated roles cannot directly insert or update wallets, games, markets, positions, trades, snapshots, leases, or ingestion events.
 

@@ -17,10 +17,6 @@ export default function SiteHeader() {
             <span className="brand-mark" aria-hidden="true">♞</span>
             <span>BetChess</span>
           </Link>
-          <div className="play-credit-badge">
-            <span className="live-dot" aria-hidden="true" />
-            10,000 play credits · no cash value
-          </div>
           <div className="header-account">
             {loading ? <span className="muted">Checking session…</span> : user ? (
               <>

@@ -47,7 +47,7 @@ export default function Auth({ onClose }: { onClose: () => void }) {
         <button className="dialog-close" onClick={onClose} aria-label="Close">×</button>
         <div className="eyebrow">PLAY-MONEY MARKET</div>
         <h1 id="auth-title">{isSignUp ? 'Create your account' : 'Welcome back'}</h1>
-        <p className="muted">{isSignUp ? 'Start with 10,000 credits. They have no cash value.' : 'Sign in to quote, buy, and sell outcome shares.'}</p>
+        <p className="muted">{isSignUp ? 'Start with 500 credits. They have no cash value.' : 'Sign in to quote, buy, and sell outcome shares.'}</p>
         <form onSubmit={submit} className="auth-form">
           {isSignUp && <label>Display name<input value={displayName} onChange={(event) => setDisplayName(event.target.value)} minLength={2} maxLength={32} required /></label>}
           <label>Email<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" required /></label>
