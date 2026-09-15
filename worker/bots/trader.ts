@@ -13,16 +13,30 @@ interface BotRuntime {
 export class BotTrader {
   private constructor(private readonly bots: BotRuntime[]) {}
 
-  static async create(accounts: BotAccountConfig[]) {
-    const bots = await Promise.all(accounts.map(async (account) => ({
-      account,
-      client: await botClient(account),
-      lastTradeAt: new Map<string, number>(),
-    })));
+  get size() {
+    return this.bots.length;
+  }
+
+  /**
+   * Bots are best-effort: a provisioning failure disables that bot (or all of
+   * them) with a warning rather than taking the worker down.
+   */
+  static async create(accounts: BotAccountConfig[], service: SupabaseClient) {
+    const bots: BotRuntime[] = [];
+    for (const account of accounts) {
+      try {
+        bots.push({ account, client: await botClient(account, service), lastTradeAt: new Map<string, number>() });
+        console.log(`Bot ${account.personality} signed in`);
+      } catch (error) {
+        console.warn(`Bot ${account.personality} unavailable: ${error instanceof Error ? error.message : error}`);
+      }
+    }
+    if (accounts.length > 0 && bots.length === 0) console.warn('No bots could be provisioned — continuing without bots');
     return new BotTrader(bots);
   }
 
   async tradeMarket(marketId: string, fair: Prices, service: SupabaseClient) {
+    if (this.bots.length === 0) return;
     const { data: market, error } = await service.from('markets').select('white_q,draw_q,black_q,liquidity_b,status').eq('id', marketId).single();
     if (error || market.status !== 'open') return;
     const { data: prices, error: priceError } = await service.rpc('market_prices', {
@@ -55,7 +69,10 @@ export class BotTrader {
         p_idempotency_key: crypto.randomUUID(),
         p_metadata: { source: 'stockfish-bot', personality: personality.name, fair, edge: decision.edge },
       });
-      if (!tradeError) bot.lastTradeAt.set(marketId, Date.now());
+      if (!tradeError) {
+        bot.lastTradeAt.set(marketId, Date.now());
+        console.log(`Bot ${personality.name} bought ${(decision.sharesMilli / 1000).toFixed(1)} ${decision.outcome} shares (edge ${(decision.edge * 100).toFixed(1)}pp)`);
+      }
     }
   }
 }

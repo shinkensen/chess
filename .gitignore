@@ -34,6 +34,9 @@ yarn-error.log*
 .env*
 !.env.example
 
+# auto-provisioned bot credentials (generated passwords)
+worker/.bot-credentials.json
+
 # vercel
 .vercel
 

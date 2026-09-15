@@ -1,5 +1,4 @@
 import ClientMarketList from './components/ClientMarketList';
-import LocalMarketManager from './components/LocalMarketManager';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,8 +18,6 @@ export default async function Home() {
         </div>
       </section>
 
-      <LocalMarketManager />
-
       <ClientMarketList />
 
       <section className="how-it-works">
@@ -31,4 +28,3 @@ export default async function Home() {
     </main>
   );
 }
-

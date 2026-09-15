@@ -14,18 +14,29 @@ export interface WorkerConfig {
   botAccounts: BotAccountConfig[];
 }
 
-export function loadConfig(): WorkerConfig {
-  const featuredGameIds = new Set(splitEnv('FEATURED_LICHESS_GAME_IDS'));
-  if (!featuredGameIds.size) throw new Error('FEATURED_LICHESS_GAME_IDS must contain at least one game ID');
+const DEFAULT_STREAM_URLS = [
+  'https://lichess.org/api/tv/feed',
+  'https://lichess.org/api/tv/blitz/feed',
+  'https://lichess.org/api/tv/rapid/feed',
+  'https://lichess.org/api/tv/classical/feed',
+];
 
+const DEFAULT_BOT_ACCOUNTS: BotAccountConfig[] = [
+  { personality: 'Endgame Sage', email: 'endgame-sage@betchess-bots.example.com', password: '' },
+  { personality: 'Centipawn Capital', email: 'centipawn-capital@betchess-bots.example.com', password: '' },
+  { personality: 'Tactical Surge', email: 'tactical-surge@betchess-bots.example.com', password: '' },
+];
+
+export function loadConfig(): WorkerConfig {
   return {
     holderId: process.env.WORKER_HOLDER_ID ?? crypto.randomUUID(),
-    featuredGameIds,
-    streamUrls: splitEnv('LICHESS_STREAM_URLS', ['https://lichess.org/api/tv/feed']),
+    // Optional filter: when empty every TV game gets a market.
+    featuredGameIds: new Set(splitEnv('FEATURED_LICHESS_GAME_IDS')),
+    streamUrls: splitEnv('LICHESS_STREAM_URLS', DEFAULT_STREAM_URLS),
     reconciliationMs: positiveInt('RECONCILIATION_MS', 15_000),
     staleAfterMs: positiveInt('STALE_AFTER_MS', 60_000),
     leaseMs: positiveInt('WORKER_LEASE_MS', 30_000),
-    botAccounts: parseBotAccounts(process.env.BOT_ACCOUNTS_JSON),
+    botAccounts: parseBotAccounts(process.env.BOT_ACCOUNTS_JSON, DEFAULT_BOT_ACCOUNTS),
   };
 }
 
@@ -39,16 +50,16 @@ function positiveInt(name: string, fallback: number) {
   return value;
 }
 
-function parseBotAccounts(raw: string | undefined): BotAccountConfig[] {
-  if (!raw) return [];
+function parseBotAccounts(raw: string | undefined, fallback: BotAccountConfig[]): BotAccountConfig[] {
+  if (!raw) return fallback;
   const value: unknown = JSON.parse(raw);
   if (!Array.isArray(value)) throw new Error('BOT_ACCOUNTS_JSON must be an array');
   return value.map((item) => {
     if (!item || typeof item !== 'object') throw new Error('Invalid bot account');
     const record = item as Record<string, unknown>;
-    if (typeof record.personality !== 'string' || typeof record.email !== 'string' || typeof record.password !== 'string') {
-      throw new Error('Each bot account needs personality, email, and password');
+    if (typeof record.personality !== 'string' || typeof record.email !== 'string') {
+      throw new Error('Each bot account needs at least personality and email');
     }
-    return { personality: record.personality, email: record.email, password: record.password };
+    return { personality: record.personality, email: record.email, password: typeof record.password === 'string' ? record.password : '' };
   });
 }

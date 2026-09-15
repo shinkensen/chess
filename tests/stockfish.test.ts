@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { evaluationProbabilities } from '../worker/engine/stockfish';
+import { evaluationProbabilities, materialEvaluation } from '../worker/engine/stockfish';
 
 function sum(prices: ReturnType<typeof evaluationProbabilities>) { return prices.white + prices.draw + prices.black; }
 
@@ -23,4 +23,15 @@ test('mate evaluations strongly favor the winning side', () => {
   const white = evaluationProbabilities({ centipawns: 10_000, mate: 3, depth: 18 }, '8/8/8/8/8/8/8/8 w - - 0 1');
   assert.ok(white.white > 0.98);
   assert.ok(Math.abs(sum(white) - 1) < 1e-10);
+});
+
+test('material evaluation is balanced at the start and side-to-move aware', () => {
+  assert.equal(materialEvaluation('startpos').centipawns, 0);
+  assert.equal(materialEvaluation('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1').centipawns, 0);
+  // White is up a knight (300cp from White's view); with Black to move the
+  // side-to-move convention flips the sign.
+  const whiteUp = 'r1bqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 1 1';
+  assert.equal(materialEvaluation(whiteUp).centipawns, -300);
+  const blackToMoveNeutral = materialEvaluation('8/8/8/8/8/8/8/8 b - - 0 1');
+  assert.equal(blackToMoveNeutral.centipawns, 0);
 });

@@ -22,6 +22,8 @@ export interface Game {
   black_clock_ms: number | null;
   status: string;
   winner: Outcome | null;
+  started_at: string | null;
+  completed_at: string | null;
   last_event_at: string;
 }
 
@@ -60,4 +62,14 @@ export interface TradeQuote {
   averagePrice: number;
   pricesBefore: Prices;
   pricesAfter: Prices;
+}
+
+export interface TradeRow {
+  id: string;
+  outcome: Outcome;
+  side: TradeSide;
+  shares_milli: number;
+  total_cents: number;
+  metadata: Record<string, unknown>;
+  created_at: string;
 }

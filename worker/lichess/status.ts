@@ -1,6 +1,6 @@
 import type { Outcome } from '../../lib/market/types';
 
-const TERMINAL_STATUSES = new Set([
+export const TERMINAL_STATUSES = new Set([
   'mate', 'resign', 'stalemate', 'timeout', 'draw', 'outoftime',
   'cheat', 'noStart', 'aborted', 'unknownFinish', 'variantEnd',
 ]);

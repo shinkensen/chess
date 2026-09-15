@@ -3,10 +3,28 @@ import { createInterface } from 'node:readline';
 
 export interface Evaluation { centipawns: number; mate: number | null; depth: number }
 
+const PIECE_VALUES: Record<string, number> = { p: 1, n: 3, b: 3, r: 5, q: 9 };
+
 export class StockfishEngine {
+  private useFallback = false;
+
   constructor(private readonly binary = process.env.STOCKFISH_PATH ?? 'stockfish') {}
 
-  evaluate(fen: string, moveTimeMs = 350): Promise<Evaluation> {
+  async evaluate(fen: string, moveTimeMs = 350): Promise<Evaluation> {
+    if (this.useFallback) return materialEvaluation(fen);
+    try {
+      return await this.evaluateNative(fen, moveTimeMs);
+    } catch (error) {
+      const unavailable = error instanceof Error && /ENOENT|spawn|not found/i.test(error.message);
+      if (unavailable && !this.useFallback) {
+        this.useFallback = true;
+        console.warn(`Stockfish binary "${this.binary}" unavailable — using built-in material evaluation for bot decisions`);
+      }
+      return materialEvaluation(fen);
+    }
+  }
+
+  private evaluateNative(fen: string, moveTimeMs: number): Promise<Evaluation> {
     return new Promise((resolve, reject) => {
       const engine = spawn(this.binary, [], { stdio: ['pipe', 'pipe', 'pipe'] });
       const lines = createInterface({ input: engine.stdout });
@@ -23,6 +41,23 @@ export class StockfishEngine {
       engine.stdin.write(`go movetime ${moveTimeMs}\n`);
     });
   }
+}
+
+/**
+ * Dependency-free fallback evaluation: material balance from White's perspective,
+ * converted to the side-to-move convention the native engine uses.
+ */
+export function materialEvaluation(fen: string): Evaluation {
+  const placement = fen === 'startpos' ? 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR' : fen.split(' ')[0];
+  let whiteCp = 0;
+  for (const token of placement) {
+    const lower = token.toLowerCase();
+    if (PIECE_VALUES[lower] === undefined) continue;
+    const value = PIECE_VALUES[lower] * 100;
+    whiteCp += token === lower ? -value : value;
+  }
+  const sideToMove = fen.split(' ')[1] === 'b' ? -1 : 1;
+  return { centipawns: whiteCp * sideToMove || 0, mate: null, depth: 0 };
 }
 
 export function evaluationProbabilities(evaluation: Evaluation, fen: string) {
