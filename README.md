@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# BetChess
 
-## Getting Started
+BetChess is a play-money, three-outcome prediction market for selected featured Lichess games. Users receive **10,000 credits with no cash value** and can buy or sell White, Draw, and Black outcome shares while a game is live.
 
-First, run the development server:
+## Architecture
+
+- Next.js 16 App Router frontend and authenticated Route Handlers.
+- Supabase Auth, PostgreSQL, RLS, Realtime, immutable wallet ledger, and atomic RPCs.
+- Three-outcome LMSR automated market maker with fixed-point credits and shares.
+- Always-on Lichess ingestion worker with a database lease and reconciliation.
+- Bounded Stockfish evaluation powering three disclosed bot personalities.
+
+Trading remains locked until the first confirmed move and closes on an authoritative terminal Lichess result. A winning full share settles for one play credit.
+
+## Quick start
+
+1. Install Node.js 20+, Supabase CLI, and Stockfish.
+2. Copy `.env.example` to `.env.local` and supply your own credentials.
+3. Apply `supabase/migrations/202609100001_rebuild_prediction_market.sql` using the Supabase CLI.
+4. Run `npm install`, then `npm run dev`.
+5. In a separate process, run `npm run worker`.
+
+See [SETUP.md](SETUP.md) for database, worker, bot-account, and VM deployment details.
+
+## Commands
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run dev        # development server
+npm run worker     # ingestion, settlement, engine, and bot worker
+npm run test       # unit tests
+npm run typecheck  # TypeScript validation
+npm run lint       # ESLint
+npm run build      # production build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Security model
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Browser clients cannot directly mutate wallets, positions, markets, trades, or game state. Authenticated trades run through locked, idempotent PostgreSQL RPCs. Service-role credentials are worker-only and must never use a `NEXT_PUBLIC_` environment variable.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This project is entertainment software using fictional credits. It does not support deposits, withdrawals, prizes, or cash redemption.

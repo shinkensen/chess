@@ -1,0 +1,24 @@
+[Unit]
+Description=BetChess Lichess ingestion and Stockfish worker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=betchess
+Group=betchess
+WorkingDirectory=/opt/betchess
+EnvironmentFile=/etc/betchess/worker.env
+ExecStart=/usr/bin/npm run worker
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=20
+KillSignal=SIGTERM
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/betchess
+
+[Install]
+WantedBy=multi-user.target
