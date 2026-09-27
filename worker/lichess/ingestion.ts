@@ -123,7 +123,9 @@ export async function applyEnd(
   if (gameError) throw gameError;
 
   const status = terminal.cancelled ? 'cancelled' : 'closed';
-  const { error: marketError } = await supabase.from('markets').update({ status, closed_at: now }).eq('id', ref.marketId).eq('status', 'open');
+  // Close from any pre-terminal state (a suspended market that later finished
+  // still needs closing), but never reopen an already settled/cancelled one.
+  const { error: marketError } = await supabase.from('markets').update({ status, closed_at: now }).eq('id', ref.marketId).in('status', ['open', 'suspended']);
   if (marketError) throw marketError;
   if (terminal.outcome) {
     const { error } = await supabase.rpc('settle_market', { p_market_id: ref.marketId, p_outcome: terminal.outcome });
@@ -153,20 +155,60 @@ export async function reconcileGame(supabase: SupabaseClient, ref: MarketRef, li
   }
 }
 
-export async function suspendStaleMarkets(supabase: SupabaseClient, staleAfterMs: number) {
+interface PendingGame {
+  id: string;
+  lichess_game_id: string;
+  last_event_at: string;
+}
+
+/**
+ * The TV feed never emits an `end` message — verified against the live feed and
+ * the lila source (`TvBroadcast.scala` only ever sends `featured`/`fen`). A game
+ * that finishes while it is still the featured game, or after the feed goes
+ * quiet, would otherwise never settle. This loop is the authoritative settlement
+ * path: for every market still live or suspended it asks the Lichess export API
+ * for the final result and settles resignations, timeouts, mates, and draws
+ * alike. Games that are genuinely still in progress but have gone stale are
+ * suspended; suspended markets keep being re-checked so a transient feed drop or
+ * a resignation after the feed moved on still settles.
+ */
+export async function reconcilePendingMarkets(supabase: SupabaseClient, staleAfterMs: number) {
   const cutoff = new Date(Date.now() - staleAfterMs).toISOString();
-  const { data: games, error } = await supabase.from('games').select('id,lichess_game_id,status').eq('status', 'started').lt('last_event_at', cutoff);
+  const { data: markets, error } = await supabase
+    .from('markets')
+    .select('id,status,games!inner(id,lichess_game_id,last_event_at)')
+    .in('status', ['open', 'suspended']);
   if (error) throw error;
-  if (!games?.length) return 0;
-  // Games that are still open get one chance to settle via the export API before suspending.
-  for (const game of games) {
-    const { data: market } = await supabase.from('markets').select('id,status').eq('game_id', game.id).maybeSingle();
-    if (!market || market.status !== 'open') continue;
-    await reconcileGame(supabase, { gameId: game.id, marketId: market.id, marketStatus: market.status }, game.lichess_game_id);
+  if (!markets?.length) return { settled: 0, suspended: 0 };
+
+  let settled = 0;
+  let suspended = 0;
+  for (const market of markets) {
+    const embed = market.games as unknown as PendingGame | PendingGame[] | null;
+    const game = Array.isArray(embed) ? embed[0] : embed;
+    if (!game) continue;
+    const stale = game.last_event_at < cutoff;
+    // A live market still receiving move events is obviously not finished — only
+    // spend an export request once it has gone quiet, or if it's already suspended.
+    if (market.status === 'open' && !stale) continue;
+
+    const ref = await reconcileGame(
+      supabase,
+      { gameId: game.id, marketId: market.id, marketStatus: market.status },
+      game.lichess_game_id,
+    );
+    if (ref.marketStatus === 'settled' || ref.marketStatus === 'cancelled') {
+      settled += 1;
+      continue;
+    }
+    // Still in progress but the feed dropped it: suspend so the UI stops implying
+    // a live, tradeable market. It stays in this loop and settles once it ends.
+    if (market.status === 'open' && stale) {
+      const { data } = await supabase.from('markets').update({ status: 'suspended' }).eq('id', market.id).eq('status', 'open').select('id');
+      if (data?.length) suspended += 1;
+    }
   }
-  const { data, error: updateError } = await supabase.from('markets').update({ status: 'suspended' }).eq('status', 'open').in('game_id', games.map((game) => game.id)).select('id');
-  if (updateError) throw updateError;
-  return data?.length ?? 0;
+  return { settled, suspended };
 }
 
 async function snapshotPrices(supabase: SupabaseClient, marketId: string, moveCount: number) {

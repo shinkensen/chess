@@ -14,7 +14,6 @@ export default function SiteHeader() {
       <header className="site-header">
         <div className="shell header-inner">
           <Link href="/" className="brand" aria-label="BetChess home">
-            <span className="brand-mark" aria-hidden="true">♞</span>
             <span>BetChess</span>
           </Link>
           <div className="header-account">

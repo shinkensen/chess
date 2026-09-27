@@ -80,7 +80,7 @@ export default function TradingPanel({ marketId, status, prices }: { marketId: s
     <section className="panel trading-panel">
       <div className="panel-heading"><div><span className="eyebrow">ORDER TICKET</span><h2>Trade outcome shares</h2></div>{balance !== null && <div className="wallet-balance"><span>Available</span><strong>{(balance / 100).toLocaleString()} cr</strong></div>}</div>
       {!session && <div className="notice">Sign in from the header to request quotes and trade.</div>}
-      {status === 'scheduled' && <div className="notice notice-info">⏳ Game scheduled. You can trade before it starts!</div>}
+      {status === 'scheduled' && <div className="notice">Market opens for pre-game positions. Prices settle once the first move lands.</div>}
       {!tradeable && <div className="notice notice-locked">{`This market is ${status}. Trading is unavailable.`}</div>}
       <div className="segmented"><button className={side === 'buy' ? 'active' : ''} onClick={() => setSide('buy')}>Buy</button><button className={side === 'sell' ? 'active' : ''} onClick={() => setSide('sell')}>Sell</button></div>
       <div className="outcome-picker">{outcomes.map((item) => <button key={item.key} className={outcome === item.key ? `active outcome-${item.key}` : ''} onClick={() => setOutcome(item.key)}><span>{item.label}</span><strong>{Math.round(prices[item.key] * 100)}¢</strong></button>)}</div>

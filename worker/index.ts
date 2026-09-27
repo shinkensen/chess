@@ -2,7 +2,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { BotTrader } from './bots/trader';
 import { loadConfig } from './config';
 import { StockfishEngine, evaluationProbabilities } from './engine/stockfish';
-import { applyEnd, applyFeatured, applyMove, reconcileGame, suspendStaleMarkets, type MarketRef } from './lichess/ingestion';
+import { applyEnd, applyFeatured, applyMove, reconcileGame, reconcilePendingMarkets, type MarketRef } from './lichess/ingestion';
 import { parseTvEvent, streamNdjson } from './lichess/stream';
 import { serviceClient } from './supabase';
 
@@ -139,7 +139,10 @@ async function runStream(url: string) {
 async function reconcile() {
   while (!shutdown.signal.aborted) {
     try {
-      if (primary) await suspendStaleMarkets(supabase, config.staleAfterMs);
+      if (primary) {
+        const { settled, suspended } = await reconcilePendingMarkets(supabase, config.staleAfterMs);
+        if (settled || suspended) console.log(`Reconcile: settled ${settled}, suspended ${suspended}`);
+      }
     } catch (error) {
       console.error('Reconciliation failed', error);
     }

@@ -10,4 +10,4 @@ These 3 bots also use StockFish to analyze current positions and make bets based
 
 Like a real prediction market, you can buy and sell at any time. Make an account and start playing today!
 
-The goal is to make the most money possible. Oh yea this is also multiplayer so the more the merrier
+The goal is to make the most money possible. Oh yea this is also online so you can try with your friends;the more the merrier

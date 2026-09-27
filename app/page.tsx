@@ -7,23 +7,23 @@ export default async function Home() {
     <main className="shell page-shell">
       <section className="hero">
         <div>
-          <div className="eyebrow">LIVE CHESS · REAL-TIME PRICES</div>
-          <h1>Trade the position.<br /><span>Not the hype.</span></h1>
-          <p>Three-outcome prediction markets powered by live featured games and an auditable automated market maker.</p>
+          <div className="eyebrow">LIVE FEATURED GAMES</div>
+          <h1>Prediction markets on live chess.</h1>
+          <p>Buy and sell White, Draw, and Black shares on featured Lichess games at a continuous LMSR quote. Positions settle the moment the game ends.</p>
         </div>
-        <div className="hero-stat-grid" aria-label="Market rules">
-          <div><strong>3</strong><span>outcomes</span></div>
-          <div><strong>Move 1</strong><span>market opens</span></div>
-          <div><strong>100¢</strong><span>winning payout</span></div>
-        </div>
+        <dl className="hero-stat-grid" aria-label="How the market works">
+          <div><dt>Outcomes</dt><dd>White · Draw · Black</dd></div>
+          <div><dt>Market maker</dt><dd>LMSR, on-chain auditable</dd></div>
+          <div><dt>Winning share</dt><dd>Pays 100¢ at settlement</dd></div>
+        </dl>
       </section>
 
       <ClientMarketList />
 
       <section className="how-it-works">
-        <div><span>01</span><h3>Watch the board</h3><p>Authoritative positions and clocks come from Lichess.</p></div>
-        <div><span>02</span><h3>Choose an outcome</h3><p>Buy or sell White, Draw, or Black shares at an exact LMSR quote.</p></div>
-        <div><span>03</span><h3>Settle transparently</h3><p>Winning shares pay one play credit. Credits have no cash value.</p></div>
+        <div><h3>Positions come from Lichess</h3><p>Board state, clocks, and results are read straight from the featured game feed.</p></div>
+        <div><h3>Quotes are exact</h3><p>Every buy and sell is priced by the market maker, not a spread you have to guess at.</p></div>
+        <div><h3>Settlement is automatic</h3><p>Winning shares pay one play credit each. Credits carry no cash value.</p></div>
       </section>
     </main>
   );

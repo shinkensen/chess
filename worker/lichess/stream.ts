@@ -30,11 +30,15 @@ export interface EndEvent {
 export type TvEvent = FeaturedEvent | MoveEvent | EndEvent | null;
 
 /**
- * Parse a Lichess TV NDJSON line. Verified against the live feed
- * (https://lichess.org/api/tv/feed, 2026-09-15):
+ * Parse a Lichess TV NDJSON line. Verified against the live feed and the lila
+ * source (https://lichess.org/api/tv/feed, TvBroadcast.scala, 2026-09-27):
  *   {"t":"featured","d":{"id":"...","orientation":"white","players":[{"color":"white","user":{"name":"...","title":"GM","id":"..."},"rating":3026,"seconds":60},...],"fen":"..."}}
  *   {"t":"fen","d":{"fen":"...","lm":"g1f3","wc":60,"bc":58}}
- *   {"t":"end","d":{"status":"mate","winner":"white"}}
+ * NOTE: the TV feed does NOT emit an `end` message — a featured game that
+ * finishes simply stops producing `fen` events and is replaced by a new
+ * `featured`. Settlement therefore comes from polling the export API
+ * (see reconcilePendingMarkets), not from the stream. The `end` type below is
+ * kept only for the export-API reconcile path, which synthesises one.
  */
 export function parseTvEvent(raw: unknown): TvEvent {
   if (!raw || typeof raw !== 'object') return null;

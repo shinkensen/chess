@@ -9,17 +9,13 @@ const labels: Record<string, string> = { open: 'Live', scheduled: 'Scheduled', s
 export default function ClientMarketList() {
   const [markets, setMarkets] = useState<Market[]>([]);
   const [loading, setLoading] = useState(true);
-  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
   useEffect(() => {
     const fetchMarkets = async () => {
       try {
         const response = await fetch('/api/markets', { cache: 'no-store' });
         const data = await response.json();
-        if (data.markets) {
-          setMarkets(data.markets);
-          setLastUpdate(new Date());
-        }
+        if (data.markets) setMarkets(data.markets);
       } catch (error) {
         console.error('Failed to fetch markets:', error);
       } finally {
@@ -27,14 +23,8 @@ export default function ClientMarketList() {
       }
     };
 
-    // Initial fetch
     void fetchMarkets();
-
-    // Poll every 3 seconds for live updates
-    const interval = setInterval(() => {
-      void fetchMarkets();
-    }, 3000);
-
+    const interval = setInterval(() => void fetchMarkets(), 4000);
     return () => clearInterval(interval);
   }, []);
 
@@ -44,41 +34,34 @@ export default function ClientMarketList() {
 
   if (loading) {
     return (
-      <div className="loading-state">
-        <span>♟️</span>
-        <p>Loading markets...</p>
+      <div className="market-section">
+        <div className="section-heading"><div><h2>Live now</h2><p>Loading markets…</p></div></div>
+        <div className="market-grid">{[0, 1].map((key) => <div key={key} className="market-card market-card-skeleton" aria-hidden="true" />)}</div>
       </div>
     );
   }
 
   return (
     <>
-      {lastUpdate && (
-        <div className="market-update-badge">
-          <span className="pulse-dot" />
-          Last updated: {lastUpdate.toLocaleTimeString()}
-        </div>
-      )}
-      
-      <MarketSection 
-        title="Live now" 
-        subtitle="Games in progress - trade in real-time" 
-        markets={live} 
-        empty="No games are live right now." 
+      <MarketSection
+        title="Live now"
+        subtitle="Games in progress. Prices move with every ply."
+        markets={live}
+        empty="No games are live right now."
       />
-      
-      <MarketSection 
-        title="Starting soon" 
-        subtitle="Trade before the first move!" 
-        markets={scheduled} 
-        empty="No games scheduled." 
+
+      <MarketSection
+        title="Starting soon"
+        subtitle="Take a position before the first move."
+        markets={scheduled}
+        empty="Nothing scheduled at the moment."
       />
-      
-      <MarketSection 
-        title="Completed & other" 
-        subtitle="Recently finished and suspended markets" 
-        markets={other} 
-        empty="No other markets yet." 
+
+      <MarketSection
+        title="Settled"
+        subtitle="Recently finished and suspended markets."
+        markets={other}
+        empty="No settled markets yet."
       />
     </>
   );

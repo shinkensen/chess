@@ -5,9 +5,9 @@ import { createBrowserClient } from '@/lib/supabase/client';
 import type { PriceSnapshot, Prices } from '@/lib/market/types';
 
 const series = [
-  { key: 'white', label: 'White', color: '#3975f6' },
-  { key: 'draw', label: 'Draw', color: '#d78a18' },
-  { key: 'black', label: 'Black', color: '#7b5bc7' },
+  { key: 'white', label: 'White', color: '#3d6cc4' },
+  { key: 'draw', label: 'Draw', color: '#b0842f' },
+  { key: 'black', label: 'Black', color: '#6f5aa6' },
 ] as const;
 
 export default function ProbabilityChart({ marketId, initialSnapshots, currentPrices }: { marketId: string; initialSnapshots: PriceSnapshot[]; currentPrices: Prices }) {
