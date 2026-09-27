@@ -43,10 +43,6 @@ export class StockfishEngine {
   }
 }
 
-/**
- * Dependency-free fallback evaluation: material balance from White's perspective,
- * converted to the side-to-move convention the native engine uses.
- */
 export function materialEvaluation(fen: string): Evaluation {
   const placement = fen === 'startpos' ? 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR' : fen.split(' ')[0];
   let whiteCp = 0;

@@ -30,7 +30,6 @@ const DEFAULT_BOT_ACCOUNTS: BotAccountConfig[] = [
 export function loadConfig(): WorkerConfig {
   return {
     holderId: process.env.WORKER_HOLDER_ID ?? crypto.randomUUID(),
-    // Optional filter: when empty every TV game gets a market.
     featuredGameIds: new Set(splitEnv('FEATURED_LICHESS_GAME_IDS')),
     streamUrls: splitEnv('LICHESS_STREAM_URLS', DEFAULT_STREAM_URLS),
     reconciliationMs: positiveInt('RECONCILIATION_MS', 15_000),

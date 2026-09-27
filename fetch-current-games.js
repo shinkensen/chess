@@ -1,4 +1,3 @@
-// Fetch current featured games from Lichess TV
 console.log('Fetching current featured games from Lichess TV...\n');
 
 const controller = new AbortController();

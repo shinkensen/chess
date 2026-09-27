@@ -44,22 +44,22 @@ export default function ClientMarketList() {
   return (
     <>
       <MarketSection
-        title="Live now"
-        subtitle="Games in progress. Prices move with every ply."
+        title="Live Games"
+        subtitle="Open Markets"
         markets={live}
         empty="No games are live right now."
       />
 
       <MarketSection
         title="Starting soon"
-        subtitle="Take a position before the first move."
+        subtitle="Upcoming matches"
         markets={scheduled}
         empty="Nothing scheduled at the moment."
       />
 
       <MarketSection
         title="Settled"
-        subtitle="Recently finished and suspended markets."
+        subtitle="Recently finished markets."
         markets={other}
         empty="No settled markets yet."
       />

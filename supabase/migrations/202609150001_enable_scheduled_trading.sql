@@ -1,7 +1,3 @@
--- Enable trading on scheduled markets (allow pre-game predictions)
--- This migration modifies the quote_trade and execute_trade functions to allow trading before games start
-
--- Update quote_trade to accept scheduled markets
 create or replace function public.quote_trade(
   p_market_id uuid,
   p_outcome public.market_outcome,
@@ -43,7 +39,6 @@ begin
 end;
 $$;
 
--- Update execute_trade to accept scheduled markets and remove game_not_started check
 create or replace function public.execute_trade(
   p_market_id uuid,
   p_outcome public.market_outcome,
@@ -70,8 +65,6 @@ begin
   if found then return jsonb_build_object('tradeId', v_existing.id, 'totalCents', v_existing.total_cents, 'duplicate', true); end if;
   select * into m from public.markets where id=p_market_id for update;
   if not found or m.status not in ('open', 'scheduled') then raise exception 'market_not_open'; end if;
-  -- Allow trading on scheduled markets (prediction before first move) and started games
-  -- Removed the game_not_started check to enable pre-game trading
   select * into w from public.wallets where profile_id=v_user for update;
   if not found then raise exception 'wallet_not_found'; end if;
   q := public.quote_trade(p_market_id, p_outcome, p_side, p_shares_milli);

@@ -21,9 +21,6 @@ const channels = new Map<string, ChannelState>();
 for (const url of config.streamUrls) channels.set(url, { lichessGameId: null, ref: null });
 
 let primary = false;
-// Fired when this worker gains the lease so every stream reconnects and
-// receives a fresh `featured` event (TV feeds emit it once per connection,
-// and events seen before the lease are dropped).
 let streamRestart = new AbortController();
 
 process.once('SIGINT', () => shutdown.abort());
@@ -128,7 +125,6 @@ async function runStream(url: string) {
       restart.signal.removeEventListener('abort', abort);
     }
     if (shutdown.signal.aborted) return;
-    // A restart (lease gained) reconnects immediately; real disconnects back off.
     if (!restart.signal.aborted) {
       await delay(backoffMs, undefined, { signal: shutdown.signal }).catch(() => undefined);
       backoffMs = Math.min(backoffMs * 2, 30_000);

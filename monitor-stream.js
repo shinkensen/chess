@@ -1,4 +1,3 @@
-// Monitor the stream for game updates
 console.log('Monitoring Lichess stream for game updates...\n');
 
 const gameIds = ['VGbBBoJA', 'eS24tECQ'];

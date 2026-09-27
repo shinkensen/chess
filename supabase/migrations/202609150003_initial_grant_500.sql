@@ -1,5 +1,3 @@
--- Reduce the welcome grant from 10,000 to 500 credits (50,000 cents).
-
 alter table public.wallets alter column balance_cents set default 50000;
 
 create or replace function public.handle_new_user()

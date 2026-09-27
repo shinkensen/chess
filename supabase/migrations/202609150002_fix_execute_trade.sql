@@ -1,6 +1,3 @@
--- Force update execute_trade function to use wallet_ledger correctly
--- This fixes the "relation public.ledger does not exist" error
-
 create or replace function public.execute_trade(
   p_market_id uuid,
   p_outcome public.market_outcome,

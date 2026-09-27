@@ -2,8 +2,6 @@ begin;
 
 create extension if not exists pgcrypto;
 
--- This migration replaces the empty legacy prototype schema. These tables used
--- incompatible client-mutated balances, positions, and parimutuel transactions.
 drop table if exists public.transactions cascade;
 drop table if exists public.positions cascade;
 drop table if exists public.games cascade;
@@ -211,8 +209,6 @@ begin
   else m.black_q := m.black_q + v_delta;
   end if;
   v_after := public.lmsr_cost(m.white_q, m.draw_q, m.black_q, m.liquidity_b);
-  -- LMSR inventory is measured in milli-shares. A winning share pays one
-  -- credit (100 cents), so one milli-share pays 0.1 cent.
   v_total := case
     when p_side = 'buy' then ceil((v_after-v_before) / 10)
     else floor((v_before-v_after) / 10)
@@ -253,8 +249,6 @@ begin
   if found then return jsonb_build_object('tradeId', v_existing.id, 'totalCents', v_existing.total_cents, 'duplicate', true); end if;
   select * into m from public.markets where id=p_market_id for update;
   if not found or m.status not in ('open', 'scheduled') then raise exception 'market_not_open'; end if;
-  -- Allow trading on scheduled markets (prediction before first move) and started games
-  -- Remove the game_not_started check to enable pre-game trading
   select * into w from public.wallets where profile_id=v_user for update;
   if not found then raise exception 'wallet_not_found'; end if;
   select * into p from public.positions where profile_id=v_user and market_id=p_market_id and outcome=p_outcome for update;

@@ -54,8 +54,6 @@ export default function TradingPanel({ marketId, status, prices }: { marketId: s
     if (!session || !quote) return;
     setPending(true);
     setMessage('');
-    
-    // Refresh quote right before execution to minimize slippage
     try {
       const refreshResponse = await fetch('/api/trade/quote', { 
         method: 'POST', 
@@ -90,7 +88,7 @@ export default function TradingPanel({ marketId, status, prices }: { marketId: s
       <div className="quote-card"><div><span>Estimated {side === 'buy' ? 'cost' : 'proceeds'}</span><strong>{quote ? `${(quote.totalCents / 100).toFixed(2)} cr` : '—'}</strong></div><div><span>Average price</span><strong>{quote ? `${(quote.averagePrice * 100).toFixed(1)}¢` : '—'}</strong></div><div><span>Price impact</span><strong>{quote ? `${priceImpact.toFixed(2)} pp` : '—'}</strong></div><div><span>Potential payout</span><strong>{side === 'buy' ? `${shares.toFixed(0)} cr` : '—'}</strong></div></div>
       {message && <div className="notice" role="status">{message}</div>}
       <button className="button button-primary button-block trade-submit" disabled={!session || !tradeable || !quote || pending || (side === 'sell' && (holding?.shares_milli ?? 0) < shares * 1000)} onClick={() => void execute()}>{pending ? 'Submitting…' : `${side === 'buy' ? 'Buy' : 'Sell'} ${shares || 0} ${outcome} shares`}</button>
-      <p className="fine-print">Quotes include up to 2% slippage protection. Play credits only; no cash value.</p>
+    
     </section>
   );
 }

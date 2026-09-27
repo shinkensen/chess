@@ -81,7 +81,7 @@ export default function LiveMarketView({ marketId, initial }: { marketId: string
   return (
     <>
       <section className="market-title-row">
-        <div><span className={`status status-${market.status}`}><i />{market.status}</span><h1>{game.white_name} <em>vs</em> {game.black_name}</h1><p>Featured Lichess game · Move {game.move_count} · {(market.volume_cents / 100).toLocaleString()} credits traded</p></div>
+        <div><span className={`status status-${market.status}`}><i />{market.status}</span><h1>{game.white_name} <em>vs</em> {game.black_name}</h1><p>Lichess game · Move {game.move_count} · {(market.volume_cents / 100).toLocaleString()} credits traded</p></div>
         <a href={`https://lichess.org/${game.lichess_game_id}`} target="_blank" rel="noreferrer" className="button button-quiet">View on Lichess ↗</a>
       </section>
       {isOver && (
@@ -112,7 +112,7 @@ function PlayerBar({ color, name, rating, clockMs, active }: { color: 'white' | 
 }
 
 function TradeFeed({ trades }: { trades: TradeRow[] }) {
-  return <section className="panel"><div className="panel-heading"><div><span className="eyebrow">TAPE</span><h2>Recent trades</h2></div></div>{trades.length ? <div className="trade-list">{trades.map((trade) => <div key={trade.id}><span className={`trade-side trade-${trade.side}`}>{trade.side}</span><strong>{trade.outcome}</strong><span>{trade.shares_milli / 1000} shares</span><span>{(trade.total_cents / 100).toFixed(2)} cr</span><time>{new Date(trade.created_at).toLocaleTimeString()}</time></div>)}</div> : <div className="empty-inline">No trades yet. The first order will set the tape in motion.</div>}</section>;
+  return <section className="panel"><div className="panel-heading"><div><span className="eyebrow"></span><h2>Recent trades</h2></div></div>{trades.length ? <div className="trade-list">{trades.map((trade) => <div key={trade.id}><span className={`trade-side trade-${trade.side}`}>{trade.side}</span><strong>{trade.outcome}</strong><span>{trade.shares_milli / 1000} shares</span><span>{(trade.total_cents / 100).toFixed(2)} cr</span><time>{new Date(trade.created_at).toLocaleTimeString()}</time></div>)}</div> : <div className="empty-inline">No trades yet. The first order will set the tape in motion.</div>}</section>;
 }
 
 function formatClock(value: number | null) {

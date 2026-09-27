@@ -26,7 +26,7 @@ export default function ProbabilityChart({ marketId, initialSnapshots, currentPr
 
   return (
     <section className="panel chart-panel">
-      <div className="panel-heading"><div><span className="eyebrow">MARKET HISTORY</span><h2>Outcome buy-in price</h2></div><span className="muted">Winning share pays 100¢</span></div>
+      <div className="panel-heading"><div><span className="eyebrow">PRICE HISTORY</span><h2>Outcome buy-in price</h2></div><span className="muted"></span></div>
       <div className="chart-legend">{series.map((item) => <span key={item.key}><i style={{ background: item.color }} />{item.label} <strong>{Math.round(currentPrices[item.key] * 100)}¢</strong></span>)}</div>
       <div className="chart-wrap">
         <svg viewBox="0 0 800 280" role="img" aria-label="White, Draw, and Black outcome prices over time">

@@ -1,11 +1,10 @@
-// Quick test to verify Lichess stream is working
 const gameId = 'AFW6Vh4n';
 
 console.log('Testing Lichess stream for game:', gameId);
 console.log('Connecting to https://lichess.org/api/tv/feed...\n');
 
 const controller = new AbortController();
-setTimeout(() => controller.abort(), 10000); // Stop after 10 seconds
+setTimeout(() => controller.abort(), 10000);
 
 try {
   const response = await fetch('https://lichess.org/api/tv/feed', {

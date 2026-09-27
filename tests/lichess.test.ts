@@ -3,7 +3,6 @@ import test from 'node:test';
 import { moveCountFromFen, parseTvEvent } from '../worker/lichess/stream';
 import { terminalResult } from '../worker/lichess/status';
 
-// Fixtures captured from the live Lichess TV feed (2026-09-15).
 test('parses a featured TV event', () => {
   const event = parseTvEvent({ t: 'featured', d: { id: '3dGvHgmG', orientation: 'white', players: [
     { color: 'white', user: { name: 'indianstar', title: 'GM', id: 'indianstar' }, rating: 3026, seconds: 60 },

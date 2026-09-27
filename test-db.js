@@ -1,4 +1,3 @@
-// Test database connection and check for markets
 import { createClient } from '@supabase/supabase-js';
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -13,7 +12,6 @@ const supabase = createClient(url, key, { auth: { persistSession: false } });
 
 console.log('Testing Supabase connection...\n');
 
-// Check games
 const { data: games, error: gamesError } = await supabase
   .from('games')
   .select('*')
@@ -29,7 +27,6 @@ if (gamesError) {
   });
 }
 
-// Check markets
 const { data: markets, error: marketsError } = await supabase
   .from('markets')
   .select('*, games(*)')
@@ -46,7 +43,6 @@ if (marketsError) {
   });
 }
 
-// Check worker lease
 const { data: lease, error: leaseError } = await supabase
   .from('worker_leases')
   .select('*')

@@ -12,12 +12,6 @@ export function serviceClient() {
   return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 }
 
-/**
- * Sign in as a bot account, provisioning it first if needed. Accounts are
- * created through the service-role admin API (email pre-confirmed), marked
- * is_bot, and their generated passwords persisted to a gitignored local file
- * so restarts reuse the same accounts.
- */
 export async function botClient(account: BotAccountConfig, service: SupabaseClient): Promise<SupabaseClient> {
   const url = required('NEXT_PUBLIC_SUPABASE_URL');
   const key = required('NEXT_PUBLIC_SUPABASE_ANON_KEY');

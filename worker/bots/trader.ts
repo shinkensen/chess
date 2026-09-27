@@ -2,7 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Prices } from '../../lib/market/types';
 import type { BotAccountConfig } from '../config';
 import { botClient } from '../supabase';
-import { PERSONALITIES, chooseTrade } from './strategies';
+import { PERSONALITIES, chooseTrade, poolScale } from './strategies';
 
 interface BotRuntime {
   account: BotAccountConfig;
@@ -17,10 +17,6 @@ export class BotTrader {
     return this.bots.length;
   }
 
-  /**
-   * Bots are best-effort: a provisioning failure disables that bot (or all of
-   * them) with a warning rather than taking the worker down.
-   */
   static async create(accounts: BotAccountConfig[], service: SupabaseClient) {
     const bots: BotRuntime[] = [];
     for (const account of accounts) {
@@ -37,7 +33,7 @@ export class BotTrader {
 
   async tradeMarket(marketId: string, fair: Prices, service: SupabaseClient) {
     if (this.bots.length === 0) return;
-    const { data: market, error } = await service.from('markets').select('white_q,draw_q,black_q,liquidity_b,status').eq('id', marketId).single();
+    const { data: market, error } = await service.from('markets').select('white_q,draw_q,black_q,liquidity_b,volume_cents,status').eq('id', marketId).single();
     if (error || market.status !== 'open') return;
     const { data: prices, error: priceError } = await service.rpc('market_prices', {
       p_white_q: market.white_q,
@@ -46,10 +42,11 @@ export class BotTrader {
       p_b: market.liquidity_b,
     });
     if (priceError) throw priceError;
+    const scale = poolScale(Number(market.volume_cents));
     for (const bot of this.bots) {
       const personality = PERSONALITIES.find((item) => item.name === bot.account.personality);
       if (!personality || Date.now() - (bot.lastTradeAt.get(marketId) ?? 0) < personality.cooldownMs) continue;
-      const decision = chooseTrade(personality, fair, prices as Prices);
+      const decision = chooseTrade(personality, fair, prices as Prices, {}, scale);
       if (!decision) continue;
       const { data: quote, error: quoteError } = await bot.client.rpc('quote_trade', {
         p_market_id: marketId,
@@ -59,7 +56,7 @@ export class BotTrader {
       });
       if (quoteError) continue;
       const totalCents = Number(quote.totalCents);
-      if (totalCents > personality.maxExposureCents) continue;
+      if (totalCents > personality.maxExposureCents * scale) continue;
       const { error: tradeError } = await bot.client.rpc('execute_trade', {
         p_market_id: marketId,
         p_outcome: decision.outcome,

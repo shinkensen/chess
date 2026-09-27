@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { chooseTrade, PERSONALITIES } from '../worker/bots/strategies';
+import { chooseTrade, PERSONALITIES, poolScale } from '../worker/bots/strategies';
 
 const balanced = PERSONALITIES[1];
 
@@ -20,4 +20,19 @@ test('momentum affects only personalities configured to use it', () => {
   const fair = { white: .34, draw: .33, black: .33 };
   assert.equal(chooseTrade(PERSONALITIES[0], fair, market, { black: 1 }), null);
   assert.equal(chooseTrade(PERSONALITIES[2], fair, market, { black: 1 })?.outcome, 'black');
+});
+
+test('pool scale grows with the pool and is capped', () => {
+  assert.equal(poolScale(0), 1);
+  assert.ok(poolScale(150_000) > poolScale(0));
+  assert.equal(poolScale(1_000_000_000), 6);
+  assert.equal(poolScale(-500), 1);
+});
+
+test('trade size scales with the pool', () => {
+  const fair = { white: .58, draw: .24, black: .18 };
+  const market = { white: .43, draw: .3, black: .27 };
+  const small = chooseTrade(balanced, fair, market, {}, 1);
+  const large = chooseTrade(balanced, fair, market, {}, 4);
+  assert.ok((large?.sharesMilli ?? 0) > (small?.sharesMilli ?? 0));
 });
