@@ -9,13 +9,19 @@ const labels: Record<string, string> = { open: 'Live', scheduled: 'Scheduled', s
 export default function ClientMarketList() {
   const [markets, setMarkets] = useState<Market[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [total, setTotal] = useState(0);
+  const [limit] = useState(50);
 
   useEffect(() => {
     const fetchMarkets = async () => {
       try {
-        const response = await fetch('/api/markets', { cache: 'no-store' });
+        const response = await fetch(`/api/markets?limit=${limit}&offset=0`, { cache: 'no-store' });
         const data = await response.json();
-        if (data.markets) setMarkets(data.markets);
+        if (data.markets) {
+          setMarkets(data.markets);
+          setTotal(data.total ?? 0);
+        }
       } catch (error) {
         console.error('Failed to fetch markets:', error);
       } finally {
@@ -26,7 +32,21 @@ export default function ClientMarketList() {
     void fetchMarkets();
     const interval = setInterval(() => void fetchMarkets(), 4000);
     return () => clearInterval(interval);
-  }, []);
+  }, [limit]);
+
+  const loadMore = async () => {
+    if (loadingMore || markets.length >= total) return;
+    setLoadingMore(true);
+    try {
+      const response = await fetch(`/api/markets?limit=${limit}&offset=${markets.length}`, { cache: 'no-store' });
+      const data = await response.json();
+      if (data.markets) setMarkets((prev) => [...prev, ...data.markets]);
+    } catch (error) {
+      console.error('Failed to load more markets:', error);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   const live = markets.filter((market) => market.status === 'open');
   const scheduled = markets.filter((market) => market.status === 'scheduled');
@@ -63,6 +83,27 @@ export default function ClientMarketList() {
         markets={other}
         empty="No settled markets yet."
       />
+
+      {markets.length < total && (
+        <div style={{ textAlign: 'center', margin: '2rem 0' }}>
+          <button
+            onClick={loadMore}
+            disabled={loadingMore}
+            style={{
+              padding: '0.75rem 1.5rem',
+              fontSize: '1rem',
+              background: '#1a1a1a',
+              color: '#fff',
+              border: '1px solid #333',
+              borderRadius: '0.5rem',
+              cursor: loadingMore ? 'not-allowed' : 'pointer',
+              opacity: loadingMore ? 0.6 : 1,
+            }}
+          >
+            {loadingMore ? 'Loading…' : `Load More (${total - markets.length} remaining)`}
+          </button>
+        </div>
+      )}
     </>
   );
 }
